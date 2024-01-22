@@ -1,0 +1,15 @@
+# config schema version
+version: 1
+
+# host label
+host:
+  id: "{{ inventory_hostname }}"
+
+# api location
+api:
+  endpoint: '{{ scrutiny_api_url }}'
+
+# logging
+log:
+  file: "{{ scrituny_logfile_location }}"
+  level: "{{ scrutiny_loglevel }}"

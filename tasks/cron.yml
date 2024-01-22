@@ -1,0 +1,7 @@
+- name: create cron job under /etc/cron.d/scrutiny-collector
+  ansible.builtin.cron:
+    name: scrutiny collector
+    minute: "*/15"
+    user: root
+    job: . /etc/profile; /opt/scrutiny/bin/collector-metrics run
+    cron_file: scrutiny-collector

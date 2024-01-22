@@ -1,0 +1,47 @@
+- name: Gather hardware facts
+  ansible.builtin.setup:
+    gather_subset:
+      - hardware
+
+
+- name: install smartmontools
+  ansible.builtin.package:
+    name: smartmontools
+    state: present
+      
+- name: create binary directory
+  ansible.builtin.file:
+    path: /opt/scrutiny/bin
+    state: directory
+    
+- name: create config directory
+  ansible.builtin.file:
+    path: /opt/scrutiny/config
+    state: directory
+    
+- name: copy config file
+  ansible.builtin.template:
+    src: collector.yaml
+    dest: /opt/scrutiny/config/collector.yaml
+    
+- name: get binary url
+  ansible.builtin.uri:                                                               
+    url: https://api.github.com/repos/AnalogJ/scrutiny/releases/latest
+    return_content: true                                             
+  register: scrutiny_latest                                             
+
+- name: download binary {{ scrutiny_latest.json.tag_name }}
+  loop: "{{ scrutiny_latest.json.assets }}"
+  when: >
+      ('scrutiny-collector-metrics-linux-amd64' in item.name and ansible_architecture == 'x86_64') or
+      ('scrutiny-collector-metrics-linux-arm64' in item.name and ansible_architecture == 'aarch64') or
+      ('scrutiny-collector-metrics-linux-arm-7' in item.name and ansible_architecture == 'armv7l')
+  ansible.builtin.get_url:                                                           
+    url: "{{ item.browser_download_url }}"
+    dest: /opt/scrutiny/bin/collector-metrics
+    mode: +x
+  no_log: true
+  
+  
+- name: run crontab configuration
+  include_tasks: cron.yml
